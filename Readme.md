@@ -19,7 +19,7 @@ Tools in use include the following.
 The first thing that's needed is an AMI with Docker installed.
 
 ### Packer
-To run Packer, you first need to download the zip file from [here](https://www.packer.io/downloads), then put the binary in the directory `packer`.  If paths for your AWS credentials or GitHub private key differ from what's in the bottom of [packer/playbook.yml](packer/playbook.yml), you will want to modify accordingly.  From there, simply run the following in the `packer` directory.
+To run Packer, you first need to download the zip file from [here](https://www.packer.io/downloads), then put the binary in the directory `packer`.  If paths for your AWS credentials or GitHub private key differ from what's in the bottom of [packer/playbook.yml](packer/playbook.yml), you will want to modify accordingly.  Last of all, if your preferred region isn't `us-west-1`, change that in the top of [packer/ami_gen.json](packer/ami_gen.json).  From there, simply run the following in the `packer` directory.
 ```
 ./packer build ami_gen.json
 ```
