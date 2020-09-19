@@ -30,6 +30,7 @@ This provisions a temporary instance for AMI generation that runs the Ansible Pl
 Similar to Packer, you first want to download the zip file from [here](https://www.terraform.io/downloads.html), then put the binary in the directory `terraform`.  After that, there are a few things that may need updating.
 
 1. For the instance given in [terraform/main.tf](terraform/main.tf), update `ami` with your new AMI ID
+1. If your preferred AWS region isn't `us-west-1` change the second line in the same file as above
 1. Change the default for variable `home_ip` in [terraform/variables.tf](terraform/variables.tf) to your public IP
 
 Once everyting is up to date, you can run the following in the `terraform` directory and follow the prompts.
