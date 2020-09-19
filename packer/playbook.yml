@@ -1,0 +1,88 @@
+- hosts: all
+  vars:
+    local_home: "{{ lookup('env', 'HOME') }}"
+  tasks:
+    - name: Install amazon-linux-extras packages
+      become: yes
+      command: "amazon-linux-extras install -y {{ item }}"
+      args:
+        creates: /usr/bin/docker
+      loop:
+        - epel
+        - docker
+      
+    - name: Install yum packages
+      become: yes
+      yum:
+        name: "{{ item }}"
+        update_cache: yes
+      loop:
+        - tmux
+        - vim
+        - iotop
+        - lynx
+        - git
+        - s3fs-fuse
+
+    - name: Add ec2-user to group docker
+      become: yes
+      user:
+        name: ec2-user
+        groups: docker
+
+    - name: Enable docker.service
+      become: yes
+      systemd:
+        name: docker
+        enabled: yes
+
+    - name: Make mount target for S3
+      become: yes
+      file:
+        path: /s3
+        owner: ec2-user
+        group: ec2-user
+        state: directory
+        mode: '700'
+    
+    - name: Clone Docker Compose repo
+      git:
+        repo: https://github.com/docker/compose.git
+        dest: /home/ec2-user/compose
+    
+    - name: Get Docker Compose binay URL
+      shell: |
+        COMPOSE_TAG=$(git for-each-ref --sort=creatordate \
+          | grep -v 'docs' \
+          | grep -ve 'rc[0-9]*$' \
+          | grep 'refs/tags' \
+          | tail -n 1 \
+          | awk -F '/' '{print $NF}')
+
+        echo "https://github.com/docker/compose/releases/download/$COMPOSE_TAG/docker-compose-$(uname -s)-$(uname -m)"
+      args:
+        chdir: /home/ec2-user/compose
+      register: comp_url
+
+    - name: Remove Docker Compose repo
+      file:
+        path: /home/ec2-user/compose
+        state: absent
+
+    - name: Download and install Docker Compose
+      become: yes
+      get_url:
+        url: "{{ comp_url.stdout }}"
+        dest: /usr/local/bin/docker-compose
+        mode: '755'
+    
+    - name: Copy GitHub SSH key from assumed path
+      copy:
+        src: "{{ local_home }}/.ssh/id_rsa"
+        dest: /home/ec2-user/.ssh/id_rsa
+        mode: '600'
+
+    - name: Copy AWS credentials from assumed path
+      copy:
+        src: "{{ local_home }}/.aws"
+        dest: /home/ec2-user
